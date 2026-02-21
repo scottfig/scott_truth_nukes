@@ -13,7 +13,7 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-2xl font-bold text-primary-600">💣</span>
-            <span className="text-xl font-bold text-gray-900">Scott's Truth Nukes</span>
+            <span className="text-xl font-bold text-gray-900">Scott&apos;s Truth Nukes</span>
           </Link>
           
           <nav className="flex items-center space-x-6">
