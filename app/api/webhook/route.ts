@@ -3,7 +3,7 @@ import Stripe from 'stripe'
 import { getProductByPriceId } from '@/lib/products'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2026-01-28.clover',
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -26,7 +26,11 @@ export async function POST(request: NextRequest) {
 
   // Handle the checkout.session.completed event
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session
+    // With Clover (thin events), fetch the full session for complete data
+    const sessionId = event.data.object.id
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items']
+    })
     
     // Here you would typically:
     // 1. Store the purchase in a database
