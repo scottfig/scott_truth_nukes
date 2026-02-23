@@ -1,80 +1,88 @@
-# Quick Setup Guide
+# Bloom — Flower Ecommerce Setup
 
-## Step 1: Install Dependencies
+## 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-## Step 2: Set Up Stripe
+## 2. Supabase
 
-1. **Create a Stripe Account**
-   - Go to https://stripe.com and sign up
-   - Use test mode for development
+1. Create a project at [supabase.com](https://supabase.com).
+2. In the SQL Editor, run the contents of `supabase/schema.sql` to create `orders` and `order_items`.
+3. In Project Settings → API, copy:
+   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
+   - **service_role** key (secret) → `SUPABASE_SERVICE_ROLE_KEY`
 
-2. **Get Your API Keys**
-   - Go to https://dashboard.stripe.com/test/apikeys
-   - Copy your "Publishable key" and "Secret key"
+## 3. Stripe
 
-3. **Create Products in Stripe**
-   - Go to Products in Stripe Dashboard
-   - Create a product for each PDF you want to sell
-   - For each product, create a one-time payment price
-   - Copy the Price ID (starts with `price_`)
+We use **stripe-node v20+**, which pins API version **2026-01-28.clover**. The SDK uses this by default (no override in code). When you create your webhook endpoint in the Dashboard (or with the CLI), use the same API version so webhook event payloads match the SDK types.
 
-4. **Set Up Webhook (for local development)**
-   - Install Stripe CLI: https://stripe.com/docs/stripe-cli
-   - Run: `stripe listen --forward-to localhost:3000/api/webhook`
-   - Copy the webhook signing secret (starts with `whsec_`)
+1. Create a Stripe account and use **Test mode** for development.
+2. In [Stripe Dashboard → API Keys](https://dashboard.stripe.com/test/apikeys), copy:
+   - Publishable key → `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (optional; used if you add client-side Stripe later)
+   - Secret key → `STRIPE_SECRET_KEY`
+3. Create **Products** and one-time **Prices** for each bouquet in `lib/products.ts`. Copy each Price ID (e.g. `price_xxx`) into `.env.local` as:
+   - `NEXT_PUBLIC_STRIPE_PRICE_CLASSIC_ROSE`
+   - `NEXT_PUBLIC_STRIPE_PRICE_GARDEN_DREAMS`
+   - etc., or leave placeholders for MVP.
+4. **Webhook** (development):
+   - Install [Stripe CLI](https://stripe.com/docs/stripe-cli) and run:
+     ```bash
+     stripe listen --forward-to localhost:3000/api/webhooks
+     ```
+   - Use the printed signing secret as `STRIPE_WEBHOOK_SECRET`.
 
-## Step 3: Configure Environment Variables
+## 4. Environment variables
 
-Create a `.env.local` file in the root directory:
+Create `.env.local` in the project root:
 
 ```env
-# Stripe Keys
-STRIPE_SECRET_KEY=sk_test_your_secret_key_here
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# Base URL
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# App
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
-# Stripe Price IDs (one for each product)
-NEXT_PUBLIC_STRIPE_PRICE_ID_1=price_your_price_id_1
-NEXT_PUBLIC_STRIPE_PRICE_ID_2=price_your_price_id_2
-NEXT_PUBLIC_STRIPE_PRICE_ID_3=price_your_price_id_3
+# Optional: one per product in lib/products.ts
+NEXT_PUBLIC_STRIPE_PRICE_CLASSIC_ROSE=price_...
+NEXT_PUBLIC_STRIPE_PRICE_GARDEN_DREAMS=price_...
+# ... etc.
 ```
 
-## Step 4: Add Your PDFs
-
-1. Place your PDF files in the `public/pdfs/` directory
-2. Update `lib/products.ts` with your actual products:
-   - Change product names and descriptions
-   - Update prices (in cents, e.g., 999 = $9.99)
-   - Update `pdfUrl` to match your PDF filenames
-   - Make sure `priceId` matches the Stripe Price IDs
-
-## Step 5: Run the Development Server
+## 5. Run the app
 
 ```bash
 npm run dev
 ```
 
-Visit http://localhost:3000 to see your store!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Testing Payments
+## 6. Test checkout
 
-Use Stripe's test card numbers:
-- Success: `4242 4242 4242 4242`
-- Any future expiry date
-- Any 3-digit CVC
-- Any ZIP code
+- Use Stripe test card: `4242 4242 4242 4242`
+- Any future expiry, any CVC, any US ZIP
+- After payment you’re redirected to `/success` and the order is stored in Supabase.
 
-## Production Deployment
+## 7. Production (e.g. Vercel)
 
-1. Switch Stripe to live mode
-2. Get live API keys
-3. Set up production webhook endpoint
-4. Update environment variables in your hosting platform
-5. Deploy!
+1. Create a Supabase project (or use the same one) and run `supabase/schema.sql` if needed.
+2. In Stripe, switch to **Live** and set a production webhook URL:  
+   `https://your-domain.com/api/webhooks`
+3. Set all env vars in your host (no `NEXT_PUBLIC_*` in server-only secrets).
+4. Deploy.
+
+## Future extension
+
+Placeholder API routes for agent commerce / UCP (not implemented yet):
+
+- `GET /api/products`
+- `POST /api/create-order`
+- `GET /api/prices`
+
+Email (Resend/SendGrid) for order confirmation can be added in the `checkout.session.completed` webhook handler in `app/api/webhooks/route.ts`.

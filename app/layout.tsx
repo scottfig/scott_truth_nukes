@@ -1,16 +1,26 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Cormorant_Garamond, DM_Sans } from 'next/font/google'
 import './globals.css'
-import { CartProvider } from '@/components/CartProvider'
+import { NavbarWithCart } from '@/components/NavbarWithCart'
 
-const inter = Inter({ subsets: ['latin'] })
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  variable: '--font-cormorant',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+})
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+  weight: ['400', '500', '600'],
+})
 
 export const metadata: Metadata = {
-  title: "Scott's Truth Nukes - Insightful PDFs",
-  description: 'Discover powerful insights into the world with Scott\'s Truth Nukes PDF collection',
-  verification: {
-    google: 'G7Ptldk4QQ8Ylc_o8A0drzjnB4ePGTY-LxRbXQWlzSA',
-  },
+  title: 'Bloom — Premium Flower Delivery',
+  description:
+    'Handcrafted bouquets, fresh daily. Local delivery and sustainable sourcing. Shop flowers for every occasion.',
 }
 
 export default function RootLayout({
@@ -19,11 +29,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <CartProvider>
-          {children}
-        </CartProvider>
+    <html lang="en" className={`${cormorant.variable} ${dmSans.variable}`}>
+      <body className="font-sans antialiased">
+        <NavbarWithCart />
+        <main>{children}</main>
       </body>
     </html>
   )
